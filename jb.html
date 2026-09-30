@@ -16,36 +16,61 @@
           15px/1.45 "Segoe UI",
           system-ui,
           sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
       }
       #brand {
         text-align: center;
-        padding: 8px 10px;
+        padding: 15px 10px;
         background: #0e1116;
         border-bottom: 1px solid #1e2732;
+        width: 100%;
+        margin-bottom: 30px;
       }
       #brand img {
-        width: 28px;
-        height: 28px;
-        margin-right: 8px;
+        width: 60px;
+        height: 60px;
+        margin-right: 12px;
         border-radius: 50%;
         vertical-align: middle;
       }
       #brand b {
-        font-size: 15px;
+        font-size: 20px;
         font-weight: 700;
         letter-spacing: 0.14em;
         color: #e6ebf2;
         vertical-align: middle;
       }
+      
+      #terminal {
+        background: #000000;
+        border: 3px solid #333333;
+        border-radius: 0;
+        padding: 15px;
+        width: 500px;
+        min-height: 250px;
+        display: flex;
+        flex-direction: column;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        color: #00ff00;
+        box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+        position: relative;
+      }
+      
+
+      
+      #terminal-content {
+        text-align: left;
+        line-height: 1.6;
+      }
 
       /* running: a spinner under the brand. jb.js sets body.done / body.fail / body.log. */
       #spin {
-        position: fixed;
-        top: calc(50% + 20px);
-        left: 50%;
         width: 46px;
         height: 46px;
-        margin: -23px 0 0 -23px;
+        margin: 20px auto;
         border: 4px solid #1e2732;
         border-top-color: #7fd0a0;
         border-radius: 50%;
@@ -57,18 +82,28 @@
         }
       }
       #msg {
-        position: fixed;
-        top: 50%;
-        left: 0;
-        right: 0;
-        transform: translateY(-50%);
         text-align: center;
         font-size: 16px;
         letter-spacing: 0.5px;
         display: none;
+        margin: 10px 0;
+        color: #00ff00;
+      }
+      
+      #msg::before {
+        content: "- ";
+      }
+      #result-image {
+        max-width: 90%;
+        max-height: 300px;
+        display: none;
+        border-radius: 10px;
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        margin: 10px auto;
       }
       #wrap {
         padding: 0;
+        width: 100%;
       }
       #state,
       #out {
@@ -90,6 +125,12 @@
         font-weight: 700;
         letter-spacing: 2px;
       }
+      body.done #result-image {
+        display: block;
+      }
+      body.fail #result-image {
+        display: block;
+      }
 
       /* ?log=1 -- the full step log, styled like the landing. */
       body.log #spin,
@@ -98,12 +139,17 @@
       }
       body.log #wrap {
         padding: 14px 18px;
+        width: 100%;
       }
       body.log #state {
         display: block;
-        font-size: 22px;
-        font-weight: 700;
+        font-size: 14px;
+        font-weight: 400;
         margin: 0 0 8px;
+      }
+      
+      body.log #state::before {
+        content: "- ";
       }
       body.log #out {
         display: block;
@@ -111,21 +157,22 @@
         font:
           12px/1.45 Consolas,
           monospace;
-        background: #11151b;
-        border: 1px solid #1e2732;
-        border-radius: 5px;
+        background: #000000;
+        border: 1px solid #333333;
+        border-radius: 0;
         padding: 10px 12px;
         height: calc(100vh - 141px);
         overflow-y: auto;
+        color: #00ff00;
       }
       .ok {
-        color: #7fd0a0;
+        color: #00ff00;
       }
       .bad {
-        color: #d08a7f;
+        color: #ff0000;
       }
       .warn {
-        color: #d8c07f;
+        color: #ffff00;
       }
       .safe {
         color: #7fd0a0;
@@ -146,12 +193,36 @@
         height="28"
       /><b>Skriz GAME</b>
     </div>
-    <div id="spin"></div>
-    <div id="msg">Restart your console</div>
-    <div id="wrap">
-      <div id="state"></div>
-      <div id="out"></div>
+    <div id="terminal">
+      <div id="terminal-content">
+        <div id="spin"></div>
+        <div id="msg">Restart your console</div>
+        <img id="result-image" src="" alt="Result" />
+        <div id="wrap">
+          <div id="state"></div>
+          <div id="out"></div>
+        </div>
+      </div>
     </div>
+    <script>
+      // Observer pour détecter les changements de classe sur le body
+      const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+          if (mutation.attributeName === "class") {
+            const body = document.body;
+            const resultImage = document.getElementById("result-image");
+            
+            if (body.classList.contains("done")) {
+              resultImage.src = "img/39.jpg";
+            } else if (body.classList.contains("fail")) {
+              resultImage.src = "img/38.jpg";
+            }
+          }
+        });
+      });
+      
+      observer.observe(document.body, { attributes: true });
+    </script>
     <script type="module">
       import "./jb.js?v=19";
     </script>
