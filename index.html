@@ -6,36 +6,92 @@
 <title>Skriz GAME</title>
 <style>
   html, body { margin:0; padding:0; background:#0b0d10; color:#c8ced8;
-               font:15px/1.45 "Segoe UI", system-ui, sans-serif; }
-  #wrap { padding:16px 18px; }
-  #state { font-size:22px; font-weight:700; margin:0 0 6px; }
-  #det { font-size:13px; color:#8b95a3; margin:0 0 4px; }
-  #det b { color:#c8ced8; font-weight:600; }
-  #cache { font-size:12px; color:#5c6672; margin:0 0 10px; min-height:14px; }
-  #cache.cacheok { color:#7fd0a0; }
-  .ok { color:#7fd0a0; } .bad { color:#d08a7f; } .warn { color:#d8c07f; }
-  #brand { text-align:center; padding:8px 10px; background:#0e1116;
-           border-bottom:1px solid #1e2732; }
-  #brand img { width:28px; height:28px; margin-right:8px; border-radius:50%;
+               font:15px/1.45 "Segoe UI", system-ui, sans-serif; display: flex;
+               flex-direction: column; align-items: center; min-height: 100vh; }
+  #wrap { display: flex; flex-direction: column; align-items: center; }
+  #state { font-size:14px; font-weight:400; margin:0 0 6px; color: #00ff00; }
+  #det { font-size:13px; color:#00ff00; margin:0 0 4px; white-space: pre-line; }
+  #det b { color:#00ff00; font-weight:600; }
+  #cache { font-size:12px; color:#00ff00; margin:0 0 10px; min-height:14px; }
+  #cache.cacheok { color:#00ff00; }
+  .ok { color:#00ff00; } .bad { color:#ff0000; } .warn { color:#ffff00; }
+  #brand { text-align:center; padding:15px 10px; background:#0e1116;
+           border-bottom:1px solid #1e2732; width: 100%; margin-bottom: 30px; }
+  #brand img { width:60px; height:60px; margin-right:12px; border-radius:50%;
                vertical-align:middle; }
-  #brand b { font-size:15px; font-weight:700; letter-spacing:.14em;
+  #brand b { font-size:20px; font-weight:700; letter-spacing:.14em;
              color:#e6ebf2; vertical-align:middle; }
+  
+  #terminal {
+    background: #000000;
+    border: 3px solid #333333;
+    border-radius: 0;
+    padding: 15px;
+    width: 500px;
+    min-height: 250px;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    color: #00ff00;
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+    position: relative;
+  }
+  
+  #terminal-content {
+    text-align: left;
+    line-height: 1.6;
+  }
+  
+  #terminal-content > div {
+    white-space: pre-wrap;
+  }
+  
+
+  
+  #jailbreak-btn {
+    background: #7fd0a0;
+    color: #0b0d10;
+    border: none;
+    padding: 15px 40px;
+    font-size: 18px;
+    font-weight: 700;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background 0.3s;
+  }
+  
+  #jailbreak-btn:hover {
+    background: #6bc088;
+  }
+  
+  #jailbreak-btn:active {
+    background: #5ab070;
+  }
 </style>
 </head>
 <body>
 <div id="brand"><img src="img/logo_skriz.png" alt="Logo">
-  <div id="state">detecting firmware...</div>
-  <div id="det"></div>
-  <div id="cache"></div>
+  <b>Skriz GAME</b>
 </div>
+<div id="terminal">
+  <div id="terminal-content">
+    <div id="state">- detecting firmware...</div>
+    <div id="det"></div>
+    <div id="cache"></div>
+  </div>
+</div>
+<button id="jailbreak-btn">JAILBREAK</button>
 
 <script>
 (function () {
     var stateEl = document.getElementById("state");
     var detEl = document.getElementById("det");
     var cacheEl = document.getElementById("cache");
-    function setState(t, c) { stateEl.textContent = t; stateEl.className = c || ""; }
-    function setCache(t, ok) { cacheEl.textContent = t; cacheEl.className = ok ? "cacheok" : ""; }
+    var jailbreakBtn = document.getElementById("jailbreak-btn");
+    function setState(t, c) { stateEl.textContent = "- " + t; stateEl.className = c || ""; }
+    function setCache(t, ok) { cacheEl.textContent = "- " + t; cacheEl.className = ok ? "cacheok" : ""; }
     var queryString = location.search || "";
 
     // Firmwares this build has a MEASURED kernel table for. jb.js still runs its
@@ -56,46 +112,29 @@
 
     var forced = /(?:\?|&)force=1(?:&|$)/.test(queryString);
     var supported = forced || (fwnum !== null && SUPPORTED[fwnum] === 1);
-    detEl.innerHTML = "firmware <b>" + (key || "unknown") + "</b>"
-        + (supported ? " &middot; <b>supported</b>"
-                     : " &middot; not in this build's kernel table");
+    detEl.innerHTML = "- Firmware: " + (key || "unknown") + "\n- Status: " + (supported ? "SUPPORTED" : "NOT SUPPORTED");
 
     var target = "jb.html" + location.search;
     function go() { setState("loading jailbreak...", "warn"); location.replace(target); }
 
-    function waitForTap(msg, action) {
-        setState(msg, "warn");
-        function fire() {
-            window.removeEventListener("click", fire);
-            window.removeEventListener("keydown", fire);
-            action();
+    // Button click handler
+    jailbreakBtn.addEventListener("click", function() {
+        if (!supported) {
+            setState("UNSUPPORTED FIRMWARE", "bad");
         }
-        window.addEventListener("click", fire);
-        window.addEventListener("keydown", fire);
-    }
-
-    // Off-target consoles are not launched automatically -- one tap still runs
-    // it, so a user-agent quirk on the real 13.52 console can never lock it out.
-    if (!supported) {
-        setState("UNSUPPORTED FIRMWARE", "bad");
-        waitForTap("UNSUPPORTED (" + (key || "unknown") + ") -- press X or tap to run anyway", go);
-        return;
-    }
+        go();
+    });
 
     var ac = window.applicationCache;
     if (!ac || !document.documentElement.hasAttribute("manifest")) {
-        go();
+        setCache("ready");
     } else if (!navigator.onLine) {
         setCache("offline -- from cache", true);
-        go();
     } else if (ac.status === ac.IDLE) {
         setCache("cached", true);
-        go();
     } else if (ac.status === ac.UPDATEREADY) {
         try { ac.swapCache(); } catch (e) {}
         setCache("update downloaded", true);
-        waitForTap("UPDATE READY -- press X or tap to reload & run",
-                   function () { location.reload(); });
     } else {
         setCache("checking cache...");
         ac.addEventListener("downloading",
@@ -106,25 +145,19 @@
         }, false);
         ac.addEventListener("cached", function () {
             setCache("cached for offline use", true);
-            waitForTap("CACHED (first run) -- press X or tap to run", go);
         }, false);
         ac.addEventListener("updateready", function () {
             try { ac.swapCache(); } catch (e) {}
             setCache("update downloaded", true);
-            waitForTap("UPDATE READY -- press X or tap to reload & run",
-                       function () { location.reload(); });
         }, false);
         ac.addEventListener("noupdate", function () {
             setCache("cached -- offline ready", true);
-            go();
         }, false);
         ac.addEventListener("error", function () {
             setCache("cache unavailable");
-            waitForTap("CACHE FAILED -- press X or tap to run anyway", go);
         }, false);
         ac.addEventListener("obsolete", function () {
             setCache("cache obsolete");
-            waitForTap("CACHE OBSOLETE -- press X or tap to run", go);
         }, false);
     }
 })();
